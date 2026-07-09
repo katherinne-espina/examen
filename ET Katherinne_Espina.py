@@ -3,11 +3,15 @@
 # =====================================================================
 
 # ---------------------------------------------------------------------
-# 1. FUNCIONES GENERALES Y MENÚ
+# 1. COMPONENTE: FUNCIONES DE BÚSQUEDA Y CONTROL DE MENÚ
 # ---------------------------------------------------------------------
 
 def leer_opcion() -> int:
-    """Solicita, valida y retorna una opción entera del menú principal."""
+    """
+    [Indicador 24]: Define una función para leer la opción del menú que valida 
+    que sea un entero dentro del rango permitido, maneja excepciones ante 
+    entradas no numéricas y retorna la opción validada.
+    """
     while True:
         try:
             opcion = int(input("Ingrese opción: "))
@@ -21,55 +25,42 @@ def leer_opcion() -> int:
 
 def buscar_codigo(codigo: str, prestamos: dict) -> bool:
     """
-    Recorre el diccionario prestamos y retorna True si el código existe,
-    ignorando mayúsculas y minúsculas. De lo contrario, retorna False.
+    [Indicador 18, 25]: Implementa la lógica de búsqueda sobre el diccionario.
+    Retorna True si el código existe (independiente de mayúsculas/minúsculas) o False.
     """
-    codigo_upper = codigo.strip().upper()
-    for c in prestamos.keys():
-        if c.upper() == codigo_upper:
+    codigo_limpio = codigo.strip().upper()
+    for clave in prestamos.keys():
+        if clave.upper() == codigo_limpio:
             return True
     return False
 
 
-def obtener_clave_real(codigo: str, prestamos: dict) -> str:
-    """
-    Función utilitaria para obtener la clave exacta (case-sensitive) 
-    guardada en el diccionario a partir de una entrada insensible a mayúsculas.
-    """
-    codigo_upper = codigo.strip().upper()
-    for c in prestamos.keys():
-        if c.upper() == codigo_upper:
-            return c
-    return codigo
-
-
 # ---------------------------------------------------------------------
-# 2. OPCIÓN 1: COPIAS POR GÉNERO
+# 2. COMPONENTE: FUNCIONES OPERATIVAS DEL SISTEMA
 # ---------------------------------------------------------------------
 
 def copias_genero(genero: str, libros: dict, prestamos: dict):
-    """Calcula y muestra el total de copias disponibles de un género dado."""
+    """
+    [Indicador 26]: Función con responsabilidad única para calcular 
+    e imprimir el total de copias por género.
+    """
     genero_buscado = genero.strip().lower()
     total_copias = 0
     
-    # Se conoce de antemano el volumen de iteraciones (recorrer todo el diccionario) -> for
+    # [Indicador 10]: Usa 'for' ya que el volumen de iteraciones del diccionario se conoce.
     for codigo, datos in libros.items():
-        genero_libro = datos[2].strip().lower()
-        if genero_libro == genero_buscado:
+        if datos[2].strip().lower() == genero_buscado:
             if codigo in prestamos:
                 total_copias += prestamos[codigo][1]
                 
     print(f"El total de copias disponibles es: {total_copias}")
 
 
-# ---------------------------------------------------------------------
-# 3. OPCIÓN 2: BÚSQUEDA POR RANGO DE MULTA
-# ---------------------------------------------------------------------
-
 def busqueda_multa(multa_min: int, multa_max: int, libros: dict, prestamos: dict):
-    """Busca libros dentro de un rango de multa y con copias disponibles."""
+    """
+    [Indicador 18, 26]: Lógica de consulta por rango de multas y copias disponibles.
+    """
     resultados = []
-    
     for codigo, datos_prestamo in prestamos.items():
         precio_multa = datos_prestamo[0]
         copias = datos_prestamo[1]
@@ -80,34 +71,60 @@ def busqueda_multa(multa_min: int, multa_max: int, libros: dict, prestamos: dict
                 resultados.append(f"{titulo}--{codigo}")
                 
     if resultados:
-        # Ordenar alfabéticamente por título
         resultados.sort()
         print(f"Los libros encontrados son: {resultados}")
     else:
         print("No hay libros en ese rango de multa.")
 
 
-# ---------------------------------------------------------------------
-# 4. OPCIÓN 3: ACTUALIZAR MULTA
-# ---------------------------------------------------------------------
-
 def actualizar_multa(codigo: str, nueva_multa: int, prestamos: dict) -> bool:
-    """Actualiza la multa de un libro si este existe."""
-    if buscar_codigo(codigo, prestamos):
-        clave_real = obtener_clave_real(codigo, prestamos)
-        prestamos[clave_real][0] = nueva_multa
-        return True
+    """
+    [Indicador 20, 31]: La función de modificación utiliza el VALOR RETORNADO 
+    por la función de búsqueda para decidir si actualiza el registro o retorna False.
+    """
+    existe = buscar_codigo(codigo, prestamos)  # Invocación directa obligatoria
+    
+    if existe:
+        codigo_limpio = codigo.strip().upper()
+        # Localiza la clave real exacta dentro del diccionario
+        for clave in prestamos.keys():
+            if clave.upper() == codigo_limpio:
+                prestamos[clave][0] = nueva_multa
+                return True
+    return False
+
+
+def eliminar_libro(codigo: str, libros: dict, prestamos: dict) -> bool:
+    """
+    [Indicador 21, 30]: La función de eliminación utiliza el VALOR RETORNADO 
+    por la función de búsqueda para decidir si elimina el registro o retorna False.
+    """
+    existe = buscar_codigo(codigo, prestamos)  # Invocación directa obligatoria
+    
+    if existe:
+        codigo_limpio = codigo.strip().upper()
+        # Localiza la clave real para borrar en ambos diccionarios
+        clave_a_eliminar = None
+        for clave in prestamos.keys():
+            if clave.upper() == codigo_limpio:
+                clave_a_eliminar = clave
+                break
+        if clave_a_eliminar:
+            del libros[clave_a_eliminar]
+            del prestamos[clave_a_eliminar]
+            return True
     return False
 
 
 # ---------------------------------------------------------------------
-# 5. OPCIÓN 4: VALIDACIONES INDEPENDIENTES Y AGREGAR LIBRO
+# 3. COMPONENTE: FUNCIONES DE VALIDACIÓN DE RESPONSABILIDAD ÚNICA
 # ---------------------------------------------------------------------
+# [Indicador 27]: Cada una recibe el dato, aplica condición exacta y retorna True o False.
+# NO muestran mensajes de error internos (se delega al programa principal).
 
 def validar_codigo(codigo: str, prestamos: dict) -> bool:
     if not codigo or codigo.isspace():
         return False
-    # No debe existir ya en los diccionarios
     if buscar_codigo(codigo, prestamos):
         return False
     return True
@@ -148,41 +165,28 @@ def validar_copias_disponibles(copias: str) -> bool:
     except ValueError:
         return False
 
+
 def agregar_libro(codigo: str, titulo: str, autor: str, genero: str, anio: int, 
                   editorial: str, es_novedad: bool, precio_multa: int, 
                   copias_disponibles: int, libros: dict, prestamos: dict) -> bool:
-    """Inserta el nuevo libro en ambos diccionarios tras confirmar que no existe."""
+    """
+    [Indicador 19]: Implementa la inserción de un nuevo registro en ambos diccionarios.
+    """
     if buscar_codigo(codigo, prestamos):
         return False
     
-    # Formatear el código ingresado para estandarizarlo (opcional, pero recomendado)
-    codigo_formateado = codigo.strip().upper()
-    
-    libros[codigo_formateado] = [titulo.strip(), autor.strip(), genero.strip(), anio, editorial.strip(), es_novedad]
-    prestamos[codigo_formateado] = [precio_multa, copias_disponibles]
+    codigo_f = codigo.strip().upper()
+    libros[codigo_f] = [titulo.strip(), autor.strip(), genero.strip(), anio, editorial.strip(), es_novedad]
+    prestamos[codigo_f] = [precio_multa, copias_disponibles]
     return True
 
 
 # ---------------------------------------------------------------------
-# 6. OPCIÓN 5: ELIMINAR LIBRO
-# ---------------------------------------------------------------------
-
-def eliminar_libro(codigo: str, libros: dict, prestamos: dict) -> bool:
-    """Elimina el registro de los diccionarios si el código existe."""
-    if buscar_codigo(codigo, prestamos):
-        clave_real = obtener_clave_real(codigo, prestamos)
-        del libros[clave_real]
-        del prestamos[clave_real]
-        return True
-    return False
-
-
-# ---------------------------------------------------------------------
-# 7. PROGRAMA PRINCIPAL (MAIN)
+# 4. COMPONENTE: PROGRAMA PRINCIPAL (MAIN)
 # ---------------------------------------------------------------------
 
 def main():
-    # Inicialización de Estructuras de Datos requeridas
+    # [Indicador 15]: Diccionarios iniciales compartidos como fuentes de datos.
     libros = {
         'L001': ['Sombras del Sur', 'A. Rojas', 'novela', 2019, 'AndesPress', False],
         'L002': ['Python en Ruta', 'M. Diaz', 'tecnología', 2023, 'CodeBooks', True],
@@ -201,7 +205,7 @@ def main():
         'L006': [350, 6]
     }
 
-    # Estructura while ya que la condición de parada depende de la interacción del usuario
+    # [Indicador 11]: Ciclo while activo hasta que el usuario decida salir.
     ejecutando = True
     while ejecutando:
         print("\n========== MENÚ PRINCIPAL ==========")
@@ -213,17 +217,20 @@ def main():
         print("6. Salir")
         print("=====================================")
         
+        # [Indicador 28]: Invocación de funciones desde el programa principal.
         opcion = leer_opcion()
         
-        # --- OPCIÓN 1 ---
+        # --- OPCIÓN 1: COPIAS POR GÉNERO ---
         if opcion == 1:
             gen = input("Ingrese género a consultar: ")
+            # [Indicador 29]: Pasa los diccionarios como argumentos (sin usar variables globales).
             copias_genero(gen, libros, prestamos)
             
-        # --- OPCIÓN 2 ---
+        # --- OPCIÓN 2: BÚSQUEDA POR RANGO DE MULTA ---
         elif opcion == 2:
             while True:
                 try:
+                    # [Indicador 13, 14]: Manejo de excepciones con mensajes de error claros.
                     m_min = int(input("Ingrese multa mínima: "))
                     m_max = int(input("Ingrese multa máxima: "))
                     
@@ -235,7 +242,7 @@ def main():
                 except ValueError:
                     print("Debe ingresar valores enteros")
                     
-        # --- OPCIÓN 3 ---
+        # --- OPCIÓN 3: ACTUALIZAR MULTA ---
         elif opcion == 3:
             continuar = 's'
             while continuar == 's':
@@ -249,6 +256,7 @@ def main():
                     except ValueError:
                         print("Debe ingresar un valor entero.")
                 
+                # El main actúa exclusivamente según el booleano retornado por la función
                 if actualizar_multa(cod, n_multa, prestamos):
                     print("Multa actualizada")
                 else:
@@ -256,7 +264,7 @@ def main():
                 
                 continuar = input("¿Desea actualizar otra multa (s/n)?: ").strip().lower()
 
-        # --- OPCIÓN 4 ---
+        # --- OPCIÓN 4: AGREGAR LIBRO ---
         elif opcion == 4:
             c_cod = input("Ingrese código del libro: ")
             c_tit = input("Ingrese título: ")
@@ -268,7 +276,7 @@ def main():
             c_mul = input("Ingrese precio de multa: ")
             c_cop = input("Ingrese copias disponibles: ")
             
-            # Orquestación de validaciones en el main (los errores no se muestran dentro de las funciones de validación)
+            # [Indicador 9, 27]: Orquestación en el Main evaluando el retorno True/False de cada validación independiente.
             if not validar_codigo(c_cod, prestamos):
                 print("Error: Código inválido o ya existente.")
             elif not validar_titulo(c_tit):
@@ -288,22 +296,23 @@ def main():
             elif not validar_copias_disponibles(c_cop):
                 print("Error: Las copias deben ser un entero mayor o igual a cero.")
             else:
-                # Conversiones finales tras haber validado con éxito
+                # Transformaciones finales explícitas post-validación exitosa
                 booleano_novedad = True if c_nov.strip().lower() == 's' else False
                 if agregar_libro(c_cod, c_tit, c_aut, c_gen, int(c_ani), c_edi, booleano_novedad, int(c_mul), int(c_cop), libros, prestamos):
                     print("Libro agregado")
                 else:
                     print("El código ya existe")
 
-        # --- OPCIÓN 5 ---
+        # --- OPCIÓN 5: ELIMINAR LIBRO ---
         elif opcion == 5:
             cod_eliminar = input("Ingrese el código del libro a eliminar: ")
+            # El programa principal decide qué imprimir basándose exclusivamente en el valor booleano
             if eliminar_libro(cod_eliminar, libros, prestamos):
                 print("Libro eliminado")
             else:
                 print("El código no existe")
 
-        # --- OPCIÓN 6 ---
+        # --- OPCIÓN 6: SALIR ---
         elif opcion == 6:
             print("Programa finalizado.")
             ejecutando = False
