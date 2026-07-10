@@ -1,8 +1,7 @@
 
-#             EVALUACIÓN FINAL TRANSVERSAL - PYTHON (FPY1101)
+#             EVALUACIÓN FINAL TRANSVERSAL
 
 # 1. COMPONENTE: FUNCIONES DE BÚSQUEDA Y CONTROL DE MENÚ
-# ---------------------------------------------------------------------
 
 def leer_opcion() -> int:
     """
@@ -108,8 +107,6 @@ def eliminar_libro(codigo: str, libros: dict, prestamos: dict) -> bool:
     return False
 
 # 3. COMPONENTE: FUNCIONES DE VALIDACIÓN DE RESPONSABILIDAD ÚNICA
-# ---------------------------------------------------------------------
-# [Indicador 27]: Cada función aplica la condición exacta y retorna True o False.
 
 def validar_codigo(codigo: str, prestamos: dict) -> bool:
     if not codigo or codigo.isspace():
@@ -167,7 +164,7 @@ def agregar_libro(codigo: str, titulo: str, autor: str, genero: str, anio: int,
     prestamos[codigo_f] = [precio_multa, copias_disponibles]
     return True
 
-# 4. COMPONENTE: PROGRAMA PRINCIPAL (MAIN)
+# 4. COMPONENTE: PROGRAMA PRINCIPAL
 
 def main():
     # Inicialización de las fuentes de datos 
